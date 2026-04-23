@@ -5,30 +5,30 @@ import numpy as np
 
 random.seed(0)  # for reproducibility of random behavior in obstacle avoidance
 
-def reactive_obst_avoid(lidar):
+def reactive_obst_avoid(lidar, state, rotation_angle, range):
     """
-    Simple obstacle avoidance
-    lidar : placebot object with lidar data
+    Reactive controler for ostacle avoidance, using lidar data
+    state : 1 for straight line and 0 for turn
+    rotation_angle : 1 for left and -1 for right
+    range : half of range rotation
     """
-    # TODO for TP1
-
-    global rot_speed # variable globale pour eviter les comportements ératiques proche des murs
-
-    laser_dist = lidar.get_sensor_values()
-    speed = 1.0
-    rotation_speed = 0.0
-    if np.min(laser_dist[135:225]) < 35:
-        rotation_speed = rot_speed  
-        speed = 0.0  
+    laser_dist = lidar.get_sensor_values() # lidar distances between -180 and 180 degrees 
+    
+    if np.min(laser_dist[180-range:180+range]) < 20:
+        if state == 1:
+            state = 0
+            rotation_angle = random.choice([-1, 1])  # change rotation direction at each obstacle encounter
+            range = random.randint(30, 90)  # change the range of the front sector to consider for obstacle detection
+        rotation_speed = 0.4 * rotation_angle
+        speed = 0.0
+        
     else:
-        rot_speed = 0.8* random.choice([-1, 1])  
+        state = 1
         rotation_speed = 0.0
-        speed = 1.0
-    
-    command = {"forward": speed,
-               "rotation": rotation_speed}
-    
-    return command
+        speed = 0.5
+
+    return {"forward": speed, "rotation": rotation_speed}, state, rotation_angle, range
+
 
 def wall_following(lidar, target_wall_dist, Kp, state, side):
 

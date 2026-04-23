@@ -29,8 +29,15 @@ class MyRobotSlam(RobotAbstract):
 
         # step counter to deal with init and display
         self.counter = 0
+        
+        # attribute for TP1 controler
+        self.state = 1 # 1 for straight line and 0 for turn
+        self.range = 90 # half of range rotation 
+        self.rotation_angle = 1 # 1 for left and -1 for right
+        
+        # attributes for TP1 bonus controler
         self._wall_following_state = "search"  # state for wall following behavior
-        self.rotation_side = "right"  # side to turn when following a wall
+        self.rotation_side = "left"  # side to turn when following a wall
 
         # Init SLAM object
         # Here we cheat to get an occupancy grid size that's not too large, by using the
@@ -77,7 +84,6 @@ class MyRobotSlam(RobotAbstract):
         else:
             
             score = self.tiny_slam.localise(lidar, odom_pose)
-            print(score)
             # Mise à jour de la carte seulement si le score est bon
             SCORE_THRESHOLD = 50  # à ajuster selon tes résultat
             corrected_pose = self.tiny_slam.get_corrected_pose(odom_pose)
@@ -87,7 +93,7 @@ class MyRobotSlam(RobotAbstract):
         if self.counter % 4 == 0:
             self.tiny_slam.grid.display_cv(corrected_pose)
 
-        print(self.counter, "Corrected pose:", corrected_pose)  # pour debug
+
         
         self.counter += 1
         return self.control_tp1() # TP1 control
@@ -98,13 +104,12 @@ class MyRobotSlam(RobotAbstract):
         Control function for TP1
         Control funtion with minimal random motion
         """
-        # Compute new command speed to perform obstacle avoidance
-        #command = reactive_obst_avoid(self.lidar())
         
-        target_wall_dist = 40             # desired distance from the wall (pixels)
-        Kp = 0.008    
+        # Reactive obstacle avoidance control
+        command, self.state, self.rotation_angle, self.range = reactive_obst_avoid(self.lidar(), self.state, self.rotation_angle, self.range)
         
-        command, self._wall_following_state = wall_following(self.lidar(), target_wall_dist, Kp, self._wall_following_state, self.rotation_side)
+        # Wall following control
+        
         return command
 
     def control_tp2(self):
