@@ -26,21 +26,20 @@ class Planner:
             with the format of current_cell: (i, j) in the map frame
         """
         neighbor_list = []
-        value_map = self.grid.occupancy_map
         x, y = current_cell
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
                 if dx == 0 and dy == 0:
                     continue
                 nx, ny = x + dx, y + dy
-                if 0 <= nx < value_map.shape[0] and 0 <= ny < value_map.shape[1]:
-                    if value_map[nx, ny] < -10.0:
+                if 0 <= nx < self.map_walls.shape[0] and 0 <= ny < self.map_walls.shape[1]:
+                    if self.map_walls[nx, ny] < -10.0:
                         neighbor_list.append((nx, ny))
         return neighbor_list
 
-    def heuristic(self, cell_1: Tuple[int, int], cell_2: Tuple[int, int]):
+    def heuristic(self, cell_1: Tuple[int, int], cell_2: Tuple[int, int], factor = 5.0):
         """ Return heuristic goal distance """
-        h = np.sqrt((cell_1[0] - cell_2[0])**2 + (cell_1[1] - cell_2[1])**2)
+        h = factor*np.sqrt((cell_1[0] - cell_2[0])**2 + (cell_1[1] - cell_2[1])**2)
         return h
 
     def reconstruct_path(self, came_from, goal):
@@ -69,8 +68,19 @@ class Planner:
         # a margin in the walls
         self.map_walls = copy.deepcopy(self.grid.occupancy_map)
         # TODO for TP5: dilate walls in self.map_walls to take into account a margin around obstacles
+        
+        
+        robot_radius = 8 # We approximate the robot as a circle of 8px
+        
+        kernel_size = 2 * robot_radius + 1
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+        obstacle_mask = (self.map_walls > 0).astype(np.uint8)
+        dilated_mask = cv2.dilate(obstacle_mask, kernel, iterations=1)
+        self.map_walls[dilated_mask == 1] = 40.0 
+        
+        
 
-        cv2.imshow("map_walls", self.map_walls)
+        # cv2.imshow("map_walls", self.map_walls)
 
         # min heap to contain values to explore next
         open_set = [(0.0, start)]

@@ -52,13 +52,12 @@ def wall_following(lidar, target_dist, Kp, following_state):
     
     front_dist = np.min(laser_dist[160:200])
     if front_dist < forward_limit:
-    # Obstacle devant : tourner à gauche pour longer le mur droit
+    # Obstacle in front : turn left to avoid
         command = {"forward": 0.0, "rotation": 0.5}
         return command, following_state
-    print("Error:", error, following_state)
     
     rotation_speed = Kp * error
-    # Limitation et adaptation de la vitesse forward
+    # Adaptation of the speed to stay close to the wall
     abs_rot = abs(rotation_speed)
     if abs_rot < 0.1:
         forward_speed = 0.35
@@ -104,7 +103,7 @@ def potential_field_control(lidar, current_pose, goal_pose):
             direction = current_pose[:2] - obs_pos      
             obstacle_grad += (K_obs / d**3) * (1/d - 1/d_safe) * direction
 
-    # --- Gradient attractif (repère absolu) ---
+    # Attractive gradient
     dist_to_goal = np.linalg.norm(goal_pose[:2] - current_pose[:2])
 
     if dist_to_goal < epsilon:
@@ -117,11 +116,11 @@ def potential_field_control(lidar, current_pose, goal_pose):
         K_mv = 0.008
         attract_grad = K_goal * (goal_pose[:2] - current_pose[:2])
 
-    # --- Gradient total ---
+    # Total gradient
     total_grad = attract_grad + obstacle_grad
     total_norm = np.linalg.norm(total_grad)
 
-    # --- Commande ---
+    # Moving command
     angle = np.arctan2(total_grad[1], total_grad[0]) - current_pose[2]
     angle = (angle + np.pi) % (2 * np.pi) - np.pi   # normalisation [-pi, pi]
 
@@ -138,7 +137,7 @@ def potential_field_control(lidar, current_pose, goal_pose):
     return {"forward": forward_speed, "rotation": rotation_speed}
 
 def random_free_goal(self):
-    """Tire un but aléatoire dans une zone explorée et libre."""
+    """Chose a random goal position in a free area."""
     x_min = -(1013/2 + 389.0)
     x_max =  1013/2 - 389.0
     y_min = -(700/2 + 170.0)

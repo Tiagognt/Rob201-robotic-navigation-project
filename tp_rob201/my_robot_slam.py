@@ -79,32 +79,34 @@ class MyRobotSlam(RobotAbstract):
         
         # the TODO section for TP4
         
-        init_iterarion = 50  # nombre d'itérations à attendre avant de commencer la localisation
+        init_iterarion = 50  # numer of iteration to initalize the map with the odometry pose before using the localization
         
         if self.counter < init_iterarion:
             self.tiny_slam.update_map(lidar, odom_pose)
-            corrected_pose = odom_pose  # pendant les premières itérations, on utilise la pose
+            corrected_pose = odom_pose
             
         else:
             
             score = self.tiny_slam.localise(lidar, odom_pose)
-            # Mise à jour de la carte seulement si le score est bon
-            SCORE_THRESHOLD = 50  # à ajuster selon tes résultat
+            SCORE_THRESHOLD = 50 # threshold to decide if the localization is good enough to update the map with the corrected pose
             corrected_pose = self.tiny_slam.get_corrected_pose(odom_pose)
             if score > SCORE_THRESHOLD:
                 self.tiny_slam.update_map(lidar, corrected_pose)
         
         
-        if self.counter < 2000:  
-            command = self.control_tp1() 
+        if self.exploration_counter < 2:  
+            command = self.control_tp2() 
         else:
             if not self.plannig:
-                self.traj = self.planner.plan(corrected_pose, [0.0,0.0,0.0])  # plan a trajectory to the origin (or any other goal)
+                self.traj = self.planner.plan(corrected_pose, [0.0,0.0,0.0])  # plan a trajectory to the origin 
                 self.plannig = True
             self.current_goal = self.traj[:, self.path_counter]  # update the current goal to the end of the trajectory for display
             command = potential_field_control(lidar, corrected_pose, self.current_goal) 
             if np.linalg.norm(corrected_pose[:2] - self.current_goal) < 20 and self.path_counter < self.traj.shape[1] - 1:
                 self.path_counter += 1  # move to the next point in the trajectory at the next iteration
+                if self.path_counter >= self.traj.shape[1] - 1:
+                    print("Goal reached, stopping robot.")
+                    command = {"forward": 0.0, "rotation": 0.0}  # stop the robot when the goal is reached
             
         if self.counter % 4 == 0:
             self.tiny_slam.grid.display_cv(corrected_pose, goal=self.current_goal, traj= self.traj)  # display the map with the robot pose
@@ -151,7 +153,7 @@ class MyRobotSlam(RobotAbstract):
             self.stuck_counter = 0
             self.previous_pose = pose.copy()
 
-        if self.stuck_counter > 1000:  # ~100 timesteps sans bouger
+        if self.stuck_counter > 1000:  # a time pace to decide if the robot is stuck
             self.current_goal = random_free_goal(self)
             self.exploration_counter += 1
             self.stuck_counter = 0
