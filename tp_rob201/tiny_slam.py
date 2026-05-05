@@ -118,8 +118,8 @@ class TinySlam:
         laser_x = pose[0] + laser_dist * np.cos(pose[2] + laser_angles)
         laser_y = pose[1] + laser_dist * np.sin(pose[2] + laser_angles)
         
-        laser_x_free = pose[0] + (laser_dist - 15) * np.cos(pose[2] + laser_angles)
-        laser_y_free = pose[1] + (laser_dist - 15) * np.sin(pose[2] + laser_angles)
+        laser_x_free = pose[0] + (laser_dist - 20) * np.cos(pose[2] + laser_angles)
+        laser_y_free = pose[1] + (laser_dist - 20) * np.sin(pose[2] + laser_angles)
         
         
         for i in range(len(laser_dist)):
