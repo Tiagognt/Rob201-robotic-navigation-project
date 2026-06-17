@@ -94,8 +94,8 @@ class MyRobotSlam(RobotAbstract):
                 self.tiny_slam.update_map(lidar, corrected_pose)
         
         
-        if self.exploration_counter < 2:  
-            command = self.control_tp2() 
+        if self.counter < 2000:  
+            command = self.control_tp1() 
         else:
             if not self.plannig:
                 self.traj = self.planner.plan(corrected_pose, [0.0,0.0,0.0])  # plan a trajectory to the origin 
@@ -122,7 +122,7 @@ class MyRobotSlam(RobotAbstract):
         """
         
         # Reactive obstacle avoidance control
-        #command, self.state, self.rotation_angle, self.range = reactive_obst_avoid(self.lidar(), self.state, self.rotation_angle, self.range)
+        # command, self.state, self.rotation_angle, self.range = reactive_obst_avoid(self.lidar(), self.state, self.rotation_angle, self.range)
         
         # Wall following control
         target_wall_dist = 30
@@ -133,6 +133,7 @@ class MyRobotSlam(RobotAbstract):
         target_wall_dist,
         Kp,
         self.following_state)
+        
         
         return command
 

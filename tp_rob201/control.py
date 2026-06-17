@@ -70,7 +70,7 @@ def wall_following(lidar, target_dist, Kp, following_state):
     command = {"forward": forward_speed, "rotation": rotation_speed}
     
     if following_state == "search":
-        command = {"forward": 0.4, "rotation": 0.15}  
+        command = {"forward": 0.3, "rotation": 0.1}  
     return command, following_state
 
 def potential_field_control(lidar, current_pose, goal_pose):

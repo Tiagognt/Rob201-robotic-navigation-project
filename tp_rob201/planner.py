@@ -37,7 +37,7 @@ class Planner:
                         neighbor_list.append((nx, ny))
         return neighbor_list
 
-    def heuristic(self, cell_1: Tuple[int, int], cell_2: Tuple[int, int], factor = 5.0):
+    def heuristic(self, cell_1: Tuple[int, int], cell_2: Tuple[int, int], factor = 0.0):
         """ Return heuristic goal distance """
         h = factor*np.sqrt((cell_1[0] - cell_2[0])**2 + (cell_1[1] - cell_2[1])**2)
         return h
